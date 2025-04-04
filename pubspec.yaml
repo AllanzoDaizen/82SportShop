@@ -43,6 +43,7 @@ flutter:
     - assets\images\main_photo.png
     - assets\images\logo82.png
     - assets\images\multisport.png
+    - assets\images\face.png
 
   fonts:
     - family: Poppins

@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:sportshop/home.dart';
+import 'package:sportshop/notification.dart';
 import 'package:sportshop/setting.dart'; // Make sure this exists
 
 class Cartpage extends StatefulWidget {
   const Cartpage({super.key});
+  final String userId = 'userId'; // Placeholder for userId
 
   @override
   State<Cartpage> createState() => _CartpageState();
@@ -143,7 +145,6 @@ class _CartpageState extends State<Cartpage> {
               ),
       ),
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 1,
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
@@ -154,23 +155,52 @@ class _CartpageState extends State<Cartpage> {
             label: 'Cart',
           ),
           BottomNavigationBarItem(
+            icon: Icon(Icons.notifications),
+            label: 'Notification',
+          ),
+          BottomNavigationBarItem(
             icon: Icon(Icons.settings),
             label: 'Settings',
           ),
         ],
+        unselectedItemColor: Colors.black, // Color for unselected items
+        selectedItemColor: Colors.black, // Color for selected item
         onTap: (index) {
-          // if (index == 0) {
-          //   Navigator.pushReplacement(
-          //     context,
-          //     MaterialPageRoute(
-          //       builder: (context) => const Home(),
-          //     ),
-          //   );
-          // } else if (index == 2) {
-          //   Navigator.pushReplacement(context,
-          //   MaterialPageRoute(builder: (context) => ProfilePage()));
-
-          // }
+          if (index == 0) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => Homepage(
+                  userId: widget.userId,
+                ),
+              ),
+            );
+          } else if (index == 1) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => Cartpage(),
+              ),
+            );
+          } else if (index == 2) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => NotificationPage(
+                  userId: widget.userId,
+                ),
+              ),
+            );
+          } else if (index == 3) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ProfilePage(
+                  userId: widget.userId,
+                ),
+              ),
+            );
+          }
         },
       ),
     );

@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:sportshop/forget.dart';
 import 'package:sportshop/signup.dart';
 import 'otp.dart';
 import 'package:http/http.dart' as http;
@@ -160,7 +161,12 @@ class _SignInScreenState extends State<SignInScreen> {
                 alignment: Alignment.centerRight,
                 child: TextButton(
                   onPressed: () {
-                    // Handle forgot password logic here
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ForgotPasswordScreen(),
+                      ),
+                    );
                   },
                   child: const Text(
                     "Forgot Password?",
@@ -181,71 +187,75 @@ class _SignInScreenState extends State<SignInScreen> {
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
-                  onPressed: _isLoading ? null : () async {
-                    // Check if email and password match with API data
-                    final email = _emailController.text.trim();
-                    final password = _passwordController.text.trim();
+                  onPressed: _isLoading
+                      ? null
+                      : () async {
+                          // Check if email and password match with API data
+                          final email = _emailController.text.trim();
+                          final password = _passwordController.text.trim();
 
-                    if (email.isEmpty || password.isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            "Please enter both email and password",
-                            style: TextStyle(color: Colors.red),
-                          ),
-                        ),
-                      );
-                      return;
-                    }
+                          if (email.isEmpty || password.isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  "Please enter both email and password",
+                                  style: TextStyle(color: Colors.red),
+                                ),
+                              ),
+                            );
+                            return;
+                          }
 
-                    if (_emailError != null) {
-                      return;
-                    }
+                          if (_emailError != null) {
+                            return;
+                          }
 
-                    setState(() {
-                      _isLoading = true;
-                    });
+                          setState(() {
+                            _isLoading = true;
+                          });
 
-                    try {
-                      final matchedUser = user.firstWhere(
-                        (u) => u['email'] == email && u['password'] == password,
-                        orElse: () => null,
-                      );
+                          try {
+                            final matchedUser = user.firstWhere(
+                              (u) =>
+                                  u['email'] == email &&
+                                  u['password'] == password,
+                              orElse: () => null,
+                            );
 
-                      if (matchedUser != null) {
-                        // Navigate to the OTP screen
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => OTPVerificationScreen(
-                                userId: matchedUser['id']),
-                          ),
-                        );
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              "Invalid email or password",
-                              style: TextStyle(color: Colors.red),
-                            ),
-                          ),
-                        );
-                      }
-                    } catch (e) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            "Error: $e",
-                            style: const TextStyle(color: Colors.red),
-                          ),
-                        ),
-                      );
-                    } finally {
-                      setState(() {
-                        _isLoading = false;
-                      });
-                    }
-                  },
+                            if (matchedUser != null) {
+                              // Navigate to the OTP screen
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => OTPVerificationScreen(
+                                      userId: matchedUser['id']),
+                                ),
+                              );
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    "Invalid email or password",
+                                    style: TextStyle(color: Colors.red),
+                                  ),
+                                ),
+                              );
+                            }
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  "Error: $e",
+                                  style: const TextStyle(color: Colors.red),
+                                ),
+                              ),
+                            );
+                          } finally {
+                            setState(() {
+                              _isLoading = false;
+                            });
+                          }
+                        },
                   child: _isLoading
                       ? const CircularProgressIndicator(color: Colors.white)
                       : const Text(

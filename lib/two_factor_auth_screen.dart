@@ -111,7 +111,9 @@ class _TwoFactorAuthScreenState extends State<TwoFactorAuthScreen> {
             ElevatedButton(
               onPressed: () {
                 Navigator.push(
-                    context, MaterialPageRoute(builder: (context) => Homepage(userId: widget.userId)));
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => Homepage(userId: widget.userId)));
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.black,
@@ -196,10 +198,9 @@ class _PinScreenState extends State<PinScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Image.asset('assets/logo82.png', height: 60),
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 20),
-              child: Image.asset('assets/multisport.png', height: 150),
+              child: Image.asset('assets/images/multisport.png', height: 100),
             ),
             Text(
               "Set Your 4-Digit PIN",
@@ -350,10 +351,10 @@ class _FaceIDScreenState extends State<FaceIDScreen> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               const SizedBox(height: 40),
-              Image.asset('assets/logo82.png', height: 50),
+              Image.asset('assets/images/logo82.png', height: 50),
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 20),
-                child: Image.asset('assets/multisport.png', height: 150),
+                child: Image.asset('assets/images/multisport.png', height: 150),
               ),
               const Text(
                 "Set Up FaceID",
@@ -383,8 +384,8 @@ class _FaceIDScreenState extends State<FaceIDScreen> {
                           size: 60,
                           color: Colors.green,
                         )
-                      : Image.asset(
-                          'assets/facial.webp',
+                      : Image.network(
+                          'https://cdn-icons-png.flaticon.com/128/5371/5371797.png',
                           height: 60,
                           width: 60,
                         ),
@@ -394,8 +395,11 @@ class _FaceIDScreenState extends State<FaceIDScreen> {
               ElevatedButton(
                 onPressed: isScanComplete
                     ? () {
-                        widget.onConfirmed(); // Call the confirmation callback
-                        Navigator.pushReplacementNamed(context, '/home');
+                        widget.onConfirmed(); // First call the callback
+                        Future.delayed(Duration.zero, () {
+                          Navigator.pop(
+                              context); // Then pop after the callback is complete
+                        });
                       }
                     : null,
                 style: ElevatedButton.styleFrom(
@@ -458,10 +462,10 @@ class _FingerprintScreenState extends State<FingerprintScreen> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               SizedBox(height: 40),
-              Image.asset('assets/logo82.png', height: 60),
+              Image.asset('assets/images/logo82.png', height: 60),
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 20),
-                child: Image.asset('assets/multisport.png', height: 150),
+                child: Image.asset('assets/images/multisport.png', height: 150),
               ),
               Text(
                 "Fingerprint Authentication",

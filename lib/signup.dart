@@ -58,23 +58,26 @@ class _SignUpPageState extends State<SignUpPage> {
           'isfinger': _isfinger.text,
           'isfaceid': _isfaceid.text,
           'ispin': _ispin.text,
-          'balance': "0"
+          'balance': "0",
+          'address': ""
         }),
       );
 
       if (response.statusCode == 201) {
-  final responseData = json.decode(response.body);
-  final userId = responseData['id']; // Assuming your API returns an 'id' field
-  
-  ScaffoldMessenger.of(context).showSnackBar(
-    const SnackBar(content: Text('Sign up successful!')),
-  );
-  // Navigate to OTP screen with user ID
-  Navigator.push(
-    context,
-    MaterialPageRoute(builder: (context) => OTPSignupScreen(userId: userId)),
-  );
-} else {
+        final responseData = json.decode(response.body);
+        final userId =
+            responseData['id']; // Assuming your API returns an 'id' field
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Sign up successful!')),
+        );
+        // Navigate to OTP screen with user ID
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) => OTPSignupScreen(userId: userId)),
+        );
+      } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Sign up failed: ${response.body}')),
         );
@@ -297,9 +300,24 @@ class _SignUpPageState extends State<SignUpPage> {
         if (value == null || value.isEmpty) {
           return 'This field is required';
         }
-        if (value.length < 6) {
-          return 'Password must be at least 6 characters';
+
+        // Strong password requirements:
+        if (value.length < 8) {
+          return 'Password must be at least 8 characters';
         }
+        if (!value.contains(RegExp(r'[A-Z]'))) {
+          return 'Password must contain at least one uppercase letter';
+        }
+        if (!value.contains(RegExp(r'[a-z]'))) {
+          return 'Password must contain at least one lowercase letter';
+        }
+        if (!value.contains(RegExp(r'[0-9]'))) {
+          return 'Password must contain at least one number';
+        }
+        if (!value.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'))) {
+          return 'Password must contain at least one special character';
+        }
+
         return null;
       },
     );

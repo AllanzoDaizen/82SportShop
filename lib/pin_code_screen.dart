@@ -27,7 +27,7 @@ class _PinCodeScreenState extends State<PinCodeScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Image.asset('assets/images/logo82.png', height: 60), // Logo
+            // Logo
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 20),
               child: Image.asset('assets/images/multisport.png',

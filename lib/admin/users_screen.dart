@@ -33,7 +33,7 @@ class _UsersScreenState extends State<UsersScreen> {
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
-          title: const Text("Anh Admin Anh Jg tver mix kr ban del"),
+          title: const Text("Admin"),
         ),
         body: FutureBuilder<List<dynamic>>(
           future: UsersService.instance.getUsers(),

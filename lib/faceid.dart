@@ -4,7 +4,7 @@ import 'dart:async';
 import 'package:sportshop/home.dart';
 
 class FaceIDAuthScreen extends StatefulWidget {
-    final String userId;
+  final String userId;
   const FaceIDAuthScreen({super.key, required this.userId});
   @override
   _FaceIDAuthScreenState createState() => _FaceIDAuthScreenState();
@@ -52,9 +52,6 @@ class _FaceIDAuthScreenState extends State<FaceIDAuthScreen> {
             children: [
               const SizedBox(height: 40),
 
-              // "82" Sports Logo
-              Image.asset('assets/images/logo82.png', height: 50),
-
               // Sports Illustration
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 20),
@@ -89,15 +86,15 @@ class _FaceIDAuthScreenState extends State<FaceIDAuthScreen> {
                   ),
                   child: isScanComplete
                       ? const Icon(
-                    Icons.check_circle_rounded,
-                    size: 60,
-                    color: Colors.green,
-                  ) // ✅ Checkmark after scan
-                      : Image.asset(
-                    'assets/facial.webp',
-                    height: 60,
-                    width: 60,
-                  ), // 🏞️ Custom FaceID image before scan
+                          Icons.check_circle_rounded,
+                          size: 60,
+                          color: Colors.green,
+                        ) // ✅ Checkmark after scan
+                      : Image.network(
+                          'https://cdn-icons-png.flaticon.com/128/5371/5371797.png',
+                          height: 60,
+                          width: 60,
+                        ), // 🏞️ Custom FaceID image before scan
                 ),
               ),
 
@@ -107,17 +104,20 @@ class _FaceIDAuthScreenState extends State<FaceIDAuthScreen> {
               ElevatedButton(
                 onPressed: isScanComplete
                     ? () {
-                  // Proceed to the next screen after successful FaceID scan
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => Homepage(userId: widget.userId)));
-                }
+                        // Proceed to the next screen after successful FaceID scan
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) =>
+                                    Homepage(userId: widget.userId)));
+                      }
                     : null,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.black,
-                  padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
                 ),
                 child: const Text(
                   "CONFIRM",
@@ -130,7 +130,7 @@ class _FaceIDAuthScreenState extends State<FaceIDAuthScreen> {
               // Security Message
               const Text(
                 'FaceID is stored in the security module of this phone\n'
-                    'and cannot be obtained by the system or apps.',
+                'and cannot be obtained by the system or apps.',
                 textAlign: TextAlign.center,
                 style: TextStyle(color: Colors.grey),
               ),

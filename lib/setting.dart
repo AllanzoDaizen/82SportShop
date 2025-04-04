@@ -4,6 +4,8 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:sportshop/cartpage.dart';
 import 'package:sportshop/home.dart';
 import 'package:http/http.dart' as http;
+import 'package:sportshop/notification.dart';
+import 'package:sportshop/signin.dart';
 
 class ProfilePage extends StatefulWidget {
   final String userId;
@@ -136,7 +138,9 @@ class _ProfilePageState extends State<ProfilePage> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => ShippingAddressPage(),
+                              builder: (context) => ShippingAddressPage(
+                                userId: widget.userId,
+                              ),
                             ),
                           );
                         },
@@ -171,8 +175,37 @@ class _ProfilePageState extends State<ProfilePage> {
                           backgroundColor: Colors.black,
                           padding: const EdgeInsets.symmetric(vertical: 15),
                         ),
-                        onPressed: () {
-                          // Log out action
+                        onPressed: () async {
+                          final shouldLogout = await showDialog<bool>(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: const Text('Log Out'),
+                              content: const Text(
+                                  'Are you sure you want to log out?'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () =>
+                                      Navigator.pop(context, false), // Cancel
+                                  child: const Text('Cancel'),
+                                ),
+                                TextButton(
+                                  onPressed: () =>
+                                      Navigator.pop(context, true), // OK
+                                  child: const Text('OK'),
+                                ),
+                              ],
+                            ),
+                          );
+
+                          if (shouldLogout == true) {
+                            // Perform logout logic here if needed (clear tokens, etc.)
+
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => const SignIn()),
+                            );
+                          }
                         },
                         icon: const Icon(Icons.logout, color: Colors.white),
                         label: const Text(
@@ -186,7 +219,6 @@ class _ProfilePageState extends State<ProfilePage> {
               ],
             ),
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
@@ -197,11 +229,53 @@ class _ProfilePageState extends State<ProfilePage> {
             label: 'Cart',
           ),
           BottomNavigationBarItem(
+            icon: Icon(Icons.notifications),
+            label: 'Notification',
+          ),
+          BottomNavigationBarItem(
             icon: Icon(Icons.settings),
             label: 'Settings',
           ),
         ],
-        onTap: _onItemTapped,
+        unselectedItemColor: Colors.black, // Color for unselected items
+        selectedItemColor: Colors.black, // Color for selected item
+        onTap: (index) {
+          if (index == 0) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => Homepage(
+                  userId: widget.userId,
+                ),
+              ),
+            );
+          } else if (index == 1) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => Cartpage(),
+              ),
+            );
+          } else if (index == 2) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => NotificationPage(
+                  userId: widget.userId,
+                ),
+              ),
+            );
+          } else if (index == 3) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ProfilePage(
+                  userId: widget.userId,
+                ),
+              ),
+            );
+          }
+        },
       ),
     );
   }
@@ -658,7 +732,45 @@ class _DepositWithdrawPageState extends State<DepositWithdrawPage> {
   }
 }
 
-class ShippingAddressPage extends StatelessWidget {
+class ShippingAddressPage extends StatefulWidget {
+  final String userId;
+
+  const ShippingAddressPage({Key? key, required this.userId}) : super(key: key);
+
+  @override
+  _ShippingAddressPageState createState() => _ShippingAddressPageState();
+}
+
+class _ShippingAddressPageState extends State<ShippingAddressPage> {
+  Map<String, dynamic>? userData;
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserData();
+  }
+
+  Future<void> _fetchUserData() async {
+    try {
+      final response = await http.get(
+        Uri.parse(
+            'https://67ee47bdc11d5ff4bf790013.mockapi.io/info/${widget.userId}'),
+      );
+
+      if (response.statusCode == 200) {
+        setState(() {
+          userData = json.decode(response.body);
+          isLoading = false;
+        });
+      } else {
+        setState(() => isLoading = false);
+      }
+    } catch (e) {
+      setState(() => isLoading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -667,9 +779,7 @@ class ShippingAddressPage extends StatelessWidget {
         elevation: 0,
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () {
-            Navigator.pop(context);
-          },
+          onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           'Shipping Address',
@@ -677,70 +787,220 @@ class ShippingAddressPage extends StatelessWidget {
         ),
         centerTitle: true,
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: Center(
+      body: isLoading
+          ? Center(child: CircularProgressIndicator())
+          : Column(
+              children: [
+                if (userData != null &&
+                    userData!['address'] != null &&
+                    userData!['address'].toString().isNotEmpty)
+                  _buildAddressCard()
+                else
+                  Expanded(
+                    child: Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.not_interested,
+                              size: 80, color: Colors.grey),
+                          SizedBox(height: 10),
+                          Text(
+                            'No Shipping Address',
+                            style: TextStyle(color: Colors.grey, fontSize: 16),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Column(
+                    children: [
+                      ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.grey[400],
+                          padding: EdgeInsets.symmetric(
+                              vertical: 20, horizontal: 30),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                        ),
+                        onPressed: () async {
+                          final result = await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => AddShippingAddressPage(
+                                existingAddress:
+                                    userData!['address']?.toString(),
+                              ),
+                            ),
+                          );
+                          if (result != null) {
+                            await _updateUserAddress(result);
+                          }
+                        },
+                        icon: Icon(Icons.add, color: Colors.white, size: 30),
+                        label: Text(
+                          'Add address',
+                          style: TextStyle(color: Colors.white, fontSize: 18),
+                        ),
+                      ),
+                      SizedBox(height: 20),
+                      Text(
+                        '82-Sports is e-commerce mobile application operated by ...',
+                        style: TextStyle(fontSize: 12, color: Colors.grey),
+                        textAlign: TextAlign.center,
+                      ),
+                      SizedBox(height: 5),
+                      Text(
+                        'Latest Version 8.0.2',
+                        style: TextStyle(fontSize: 12, color: Colors.grey),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+    );
+  }
+
+  Widget _buildAddressCard() {
+    final addressParts = userData!['address'].toString().split(',');
+    return Expanded(
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Card(
+            elevation: 4,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
               child: Column(
-                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.not_interested, size: 80, color: Colors.grey),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        '${userData!['firstname']} ${userData!['lastname']}',
+                        style: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.edit, color: Colors.black),
+                        onPressed: () => _navigateToEditAddress(),
+                      ),
+                    ],
+                  ),
                   SizedBox(height: 10),
-                  Text(
-                    'No Shipping Address',
-                    style: TextStyle(color: Colors.grey, fontSize: 16),
+                  Text(userData!['phone']),
+                  SizedBox(height: 10),
+                  for (var part in addressParts)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4.0),
+                      child: Text(part.trim()),
+                    ),
+                  SizedBox(height: 20),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.black,
+                      minimumSize: Size(double.infinity, 50),
+                    ),
+                    onPressed: () => _setAsDefault(),
+                    child: Text('Set as Default'),
                   ),
                 ],
               ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Column(
-              children: [
-                ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.grey[400],
-                    padding: EdgeInsets.symmetric(vertical: 20, horizontal: 30),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                  ),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => AddShippingAddressPage(),
-                      ),
-                    );
-                  },
-                  icon: Icon(Icons.add, color: Colors.white, size: 30),
-                  label: Text(
-                    'Add address',
-                    style: TextStyle(color: Colors.white, fontSize: 18),
-                  ),
-                ),
-                SizedBox(height: 20),
-                Text(
-                  '82-Sports is e-commerce mobile application operated by ...',
-                  style: TextStyle(fontSize: 12, color: Colors.grey),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: 5),
-                Text(
-                  'Latest Version 8.0.2',
-                  style: TextStyle(fontSize: 12, color: Colors.grey),
-                ),
-              ],
-            ),
-          ),
-        ],
+        ),
       ),
+    );
+  }
+
+  Future<void> _updateUserAddress(String newAddress) async {
+    setState(() => isLoading = true);
+    try {
+      final updatedUser = {
+        ...userData!,
+        'address': newAddress,
+      };
+
+      final response = await http.put(
+        Uri.parse(
+            'https://67ee47bdc11d5ff4bf790013.mockapi.io/info/${widget.userId}'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(updatedUser),
+      );
+
+      if (response.statusCode == 200) {
+        setState(() {
+          userData = updatedUser;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Address updated successfully')),
+          );
+        });
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to update address')),
+      );
+    } finally {
+      setState(() => isLoading = false);
+    }
+  }
+
+  void _navigateToEditAddress() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AddShippingAddressPage(
+          existingAddress: userData!['address']?.toString(),
+        ),
+      ),
+    );
+    if (result != null) {
+      await _updateUserAddress(result);
+    }
+  }
+
+  void _setAsDefault() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Address set as default')),
     );
   }
 }
 
-class AddShippingAddressPage extends StatelessWidget {
+class AddShippingAddressPage extends StatefulWidget {
+  final String? existingAddress;
+
+  const AddShippingAddressPage({Key? key, this.existingAddress})
+      : super(key: key);
+
+  @override
+  _AddShippingAddressPageState createState() => _AddShippingAddressPageState();
+}
+
+class _AddShippingAddressPageState extends State<AddShippingAddressPage> {
+  final _formKey = GlobalKey<FormState>();
+  final TextEditingController _addressController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.existingAddress != null) {
+      _addressController.text = widget.existingAddress!;
+    }
+  }
+
+  @override
+  void dispose() {
+    _addressController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -749,64 +1009,77 @@ class AddShippingAddressPage extends StatelessWidget {
         elevation: 0,
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () {
-            Navigator.pop(context);
-          },
+          onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'New Shipping Address',
+          widget.existingAddress == null
+              ? 'New Shipping Address'
+              : 'Edit Address',
           style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          children: [
-            _buildTextField(label: 'Recipient', hint: 'Please enter the name'),
-            SizedBox(height: 15),
-            _buildTextField(label: 'Contact number', hint: 'Please enter'),
-            SizedBox(height: 15),
-            _buildTextField(label: 'Area', hint: 'Please select an address'),
-            SizedBox(height: 15),
-            _buildTextField(label: 'Detailed address', hint: 'Please enter'),
-            SizedBox(height: 15),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.black,
-                padding: EdgeInsets.symmetric(vertical: 15),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
+      body: Form(
+        key: _formKey,
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            children: [
+              Text(
+                'Enter address parts separated by commas',
+                style: TextStyle(color: Colors.grey, fontSize: 14),
+              ),
+              SizedBox(height: 15),
+              TextFormField(
+                controller: _addressController,
+                maxLines: 5,
+                validator: (value) =>
+                    value!.isEmpty ? 'Please enter address' : null,
+                decoration: InputDecoration(
+                  labelText: 'Full Address',
+                  hintText: 'Street, City, State, Postal Code, Country',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.black),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                 ),
               ),
-              onPressed: () {
-                // Save address action
-              },
-              child: Text(
-                'Save',
-                style: TextStyle(color: Colors.white, fontSize: 16),
+              SizedBox(height: 25),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.black,
+                  minimumSize: Size(double.infinity, 50),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                onPressed: _saveAddress,
+                child: Text(
+                  'Save',
+                  style: TextStyle(color: Colors.white, fontSize: 16),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildTextField({required String label, required String hint}) {
-    return TextField(
-      decoration: InputDecoration(
-        labelText: label,
-        hintText: hint,
-        labelStyle: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
-        hintStyle: TextStyle(color: Colors.grey),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-        focusedBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: Colors.black),
-          borderRadius: BorderRadius.circular(10),
-        ),
-      ),
-    );
+  void _saveAddress() {
+    if (_formKey.currentState!.validate()) {
+      // Combine all address parts with commas
+      final address = _addressController.text
+          .split(',')
+          .map((part) => part.trim())
+          .where((part) => part.isNotEmpty)
+          .join(', ');
+
+      Navigator.pop(context, address);
+    }
   }
 }
 
